@@ -5,6 +5,8 @@ screen, drawn as a vanilla tooltip, with its item's icon, its name in your langu
 
 It sees what you can reach by default, and up to 1024 blocks away (across distant terrain) when you ask it to.
 
+![LookAt naming a grass block at the top of the screen](docs/screenshot.png)
+
 ## Settings
 
 Options → Mods → LookAt → settings:
