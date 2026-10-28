@@ -1,0 +1,27 @@
+# The sandbox has no blocks to look at, so this checks the mod's life around them: it ticks in a world,
+# on the title screen and after a reload without trapping, and never writes to chat or a HUD panel
+# (it draws with `render` only). Every key: Horizon's docs/mods.md, "Testing a mod".
+
+[[step]]
+ticks = 40
+frames = 10
+expect.commands = []
+expect.chat = []
+expect.panel = []
+
+[[step]]
+title-screen = true
+ticks = 20
+expect.chat = []
+
+[[step]]
+player = { x = 100.5, y = 80.0, z = -40.5 }
+clock = { day-time = 6000 }
+ticks = 20
+expect.chat = []
+
+[[step]]
+reload = true
+ticks = 20
+expect.chat = []
+expect.panel = []

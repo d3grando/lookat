@@ -1,0 +1,18 @@
+[package]
+name = "lookat"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Horizon client mod: the name of the block under the crosshair, at the top of the screen."
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# Pinned, so the same source always builds the same .wasm (the registry compares hashes).
+horizon-mod-sdk = { git = "https://github.com/horizon-rust/horizon", rev = "56f968e11c7627536cb6a83420caddce7e3acb8f" }
+
+[profile.release]
+opt-level = "s"
+lto = true
