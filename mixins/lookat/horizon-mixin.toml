@@ -1,0 +1,70 @@
+[mod]
+id = "lookat"
+version = "0.2.0"
+priority = 100
+
+# Pinned: every hook below is a hook point (NATIVE_HOOKS_API 1), but native.rs
+# reads the game's own state, which the hook points' helpers don't offer: the
+# crosshair's ray (clip_ray, the distant terrain), the mobs and other entities
+# under it, block tags and the correct tool, item names and the GUI item
+# renderer. So the mod is made for this one commit (README.md, "Hook points
+# and pins").
+[compatibility]
+horizon_revision = "142388e1c136e622652ec7505af15d8ad195e041"
+
+[[module]]
+id = "runtime"
+file = "crates/horizon-client/src/game.rs"
+name = "lookat"
+source = "runtime.rs"
+
+[[module]]
+id = "native"
+file = "crates/horizon-client/src/game.rs"
+name = "lookat_native"
+source = "native.rs"
+
+# Hook point: the box, drawn with the HUD (not under F1), after Horizon's
+# corner boxes and before the WebAssembly mods' shapes.
+[[injection]]
+id = "hud"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_hud"
+helper = "hud.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "&*self" },
+  { name = "batch", ty = "&mut horizon_client::hud::HudBatch", value = "&mut *batch" },
+  { name = "corners", ty = "&mut horizon_client::extras_hud::Corners", value = "&mut *corners" },
+]
+
+# Hook points: the row in Options > Mods and its settings page.
+[[injection]]
+id = "list"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_mods"
+helper = "list.rs"
+bindings = [
+  { name = "mods", ty = "&mut Vec<crate::game::native_hooks::NativeMod>", value = "&mut *mods" },
+]
+
+[[injection]]
+id = "settings"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_settings"
+helper = "settings.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "mod_id", ty = "&str", value = "mod_id" },
+  { name = "buttons", ty = "&mut Vec<String>", value = "&mut *buttons" },
+]
+
+[[injection]]
+id = "click"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_settings_click"
+helper = "click.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "mod_id", ty = "&str", value = "mod_id" },
+  { name = "button", ty = "usize", value = "button" },
+]

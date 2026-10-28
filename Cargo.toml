@@ -1,18 +1,16 @@
 [package]
 name = "lookat"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
+rust-version = "1.95"
 license = "MIT"
-description = "Horizon client mod: the name of the block under the crosshair, at the top of the screen."
+description = "LookAt: a native Horizon mod showing what is under the crosshair as a vanilla tooltip."
 publish = false
 
+# LookAt's game-independent logic and its tests: mixins/lookat/runtime.rs, the
+# same file the bundle adds to the game as `crate::game::lookat`. The adapter
+# to the game, native.rs, only compiles inside Horizon.
 [lib]
-crate-type = ["cdylib"]
+path = "src/lib.rs"
 
 [dependencies]
-# Pinned, so the same source always builds the same .wasm (the registry compares hashes).
-horizon-mod-sdk = { git = "https://github.com/horizon-rust/horizon", rev = "56f968e11c7627536cb6a83420caddce7e3acb8f" }
-
-[profile.release]
-opt-level = "s"
-lto = true

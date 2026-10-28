@@ -1,9 +1,0 @@
-id = "lookat"
-name = "LookAt"
-version = "0.1.0"
-description = "The block under your crosshair at the top of the screen: its icon, its name in your language and where it comes from, as a vanilla tooltip. Within reach by default; up to 1024 blocks away, with its position and distance, in the mod's settings."
-authors = ["d3grando"]
-api = "0.1"
-side = "client"
-capabilities = ["game-read", "render", "recipes", "ui", "storage"]
-experimental = ["render", "recipes", "ui"]
