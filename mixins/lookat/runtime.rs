@@ -19,7 +19,7 @@ use std::collections::HashMap;
 /// The mod's id: its row in Options > Mods and its settings folder
 /// (`horizon-mods/.horizon-mod-data/lookat/`), the WebAssembly mod's too.
 pub const ID: &str = "lookat";
-pub const VERSION: &str = "0.2.0";
+pub const VERSION: &str = "0.2.1";
 pub const DESCRIPTION: &str = "What is under your crosshair at the top of the screen, as a vanilla tooltip: \
     a block's icon, name, harvest tool and where it comes from, a mob's name and health.";
 
@@ -627,6 +627,50 @@ pub fn content_size(v: &View, text_width: &dyn Fn(&str) -> f32) -> (f32, f32) {
 /// `screen_w` wide.
 pub fn top_centre(screen_w: f32, outer_w: f32) -> f32 {
     ((screen_w - outer_w) / 2.0).round()
+}
+
+/// The top of the box at the top centre (frame included): 0.1.0's place,
+/// or under the boss bars when `bosses` of them show on a screen `screen_h`
+/// high.
+pub fn top_centre_top(bosses: usize, screen_h: f32) -> f32 {
+    match boss_bars_bottom(bosses, screen_h) {
+        Some(bottom) => (MARGIN - FRAME).max(bottom + CORNER_GAP),
+        None => MARGIN - FRAME,
+    }
+}
+
+/// The bottom of the last boss bar drawn (`BossHealthOverlay`: bars 5
+/// pixels high, 19 apart from y 12, until a third of the screen is
+/// reached); none without bars.
+pub fn boss_bars_bottom(bosses: usize, screen_h: f32) -> Option<f32> {
+    let third = (screen_h as i32 / 3) as f32;
+    let mut y = 12.0;
+    let mut bottom = None;
+    for _ in 0..bosses {
+        bottom = Some(y + 5.0);
+        y += 19.0;
+        if y >= third {
+            break;
+        }
+    }
+    bottom
+}
+
+/// How far, in the debug screen's own pixels, F3's columns reach in from
+/// the left and right edges where a box at the top centre could meet them:
+/// vanilla's longest lines there (`Facing: ...`, the chart keys) are about
+/// 330 wide, a third of its screen at the default debug GUI scale.
+pub const F3_COLUMN: f32 = 340.0;
+/// The smallest a box shrinks to beside F3's columns.
+pub const F3_MIN_SIZE: f32 = 0.5;
+
+/// The box's scale at the top centre while F3 is open: `size`, or less so
+/// that the box (`outer_w` wide at 1.0) keeps clear of both columns on a
+/// screen `screen_w` GUI pixels wide where the debug screen draws at
+/// `ratio` (its pixels per GUI pixel); never under [`F3_MIN_SIZE`].
+pub fn beside_f3(size: f32, outer_w: f32, screen_w: f32, ratio: f32) -> f32 {
+    let room = screen_w - 2.0 * (F3_COLUMN * ratio + CORNER_GAP);
+    size.min(room / outer_w).max(F3_MIN_SIZE)
 }
 
 /// What to draw, in order.
@@ -1246,6 +1290,38 @@ mod tests {
         };
         assert_eq!(alpha(1.0), 0xF0);
         assert_eq!(alpha(0.25), 0x3C);
+    }
+
+    #[test]
+    fn the_top_centre_box_sits_under_the_boss_bars() {
+        // No bars: 0.1.0's place, the content `MARGIN` from the top.
+        assert_eq!(top_centre_top(0, 240.0), MARGIN - FRAME);
+        assert_eq!(boss_bars_bottom(0, 240.0), None);
+        // One bar at y 12, 5 high; the next 19 lower.
+        assert_eq!(boss_bars_bottom(1, 240.0), Some(17.0));
+        assert_eq!(top_centre_top(1, 240.0), 17.0 + CORNER_GAP);
+        assert_eq!(boss_bars_bottom(2, 240.0), Some(36.0));
+        // Bars stop at a third of the screen (80): 12, 31, 50, 69, then 88.
+        assert_eq!(boss_bars_bottom(9, 240.0), boss_bars_bottom(4, 240.0));
+        assert_eq!(boss_bars_bottom(4, 240.0), Some(74.0));
+    }
+
+    #[test]
+    fn beside_f3_the_box_shrinks_to_keep_clear_of_both_columns() {
+        // 1920x1080 at GUI scale 4: 480 wide, F3 at half the scale.
+        let room = 480.0 - 2.0 * (F3_COLUMN * 0.5 + CORNER_GAP);
+        assert_eq!(beside_f3(1.0, 80.0, 480.0, 0.5), 1.0);
+        assert_eq!(beside_f3(2.0, 80.0, 480.0, 0.5), room / 80.0);
+        assert!(beside_f3(2.0, 80.0, 480.0, 0.5) * 80.0 <= room);
+        // Where the box fits at its size it keeps it.
+        assert_eq!(beside_f3(2.0, 80.0, 960.0, 1.0), 2.0);
+        // Never smaller than half.
+        assert_eq!(beside_f3(2.0, 400.0, 480.0, 1.0), F3_MIN_SIZE);
+        // The box, centred, stays between the columns.
+        let (w, s) = (120.0, beside_f3(2.0, 120.0, 640.0, 2.0 / 3.0));
+        let left = top_centre(640.0, w * s);
+        assert!(left >= F3_COLUMN * 2.0 / 3.0);
+        assert!(left + w * s <= 640.0 - F3_COLUMN * 2.0 / 3.0);
     }
 
     #[test]

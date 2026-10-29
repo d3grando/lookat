@@ -1,6 +1,6 @@
 [mod]
 id = "lookat"
-version = "0.2.0"
+version = "0.2.1"
 priority = 100
 
 # Pinned: every hook below is a hook point (NATIVE_HOOKS_API 1), but native.rs

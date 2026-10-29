@@ -14,6 +14,7 @@ use horizon_client::extras_hud::Corners;
 use horizon_client::hud::HudBatch;
 use horizon_client::items::ItemStack;
 use horizon_client::mobs::Mob;
+use horizon_client::{boss_overlay, debug_overlay};
 use std::sync::Mutex;
 
 /// The settings, read from their files once and kept up to date by the
@@ -55,21 +56,38 @@ impl Game<'_> {
         let view = lk::view(&target, &s, &Items(self));
         let width = |text: &str| self.native_text_width(text);
         let (w, h) = lk::content_size(&view, &width);
-        let scale = s.size();
-        let outer = ((w + 2.0 * lk::FRAME) * scale, (h + 2.0 * lk::FRAME) * scale);
+        let unscaled = (w + 2.0 * lk::FRAME, h + 2.0 * lk::FRAME);
+        // F3's debug screen has a column in each top corner (this commit's
+        // `native_corner_shown` only reports the left one): with it open,
+        // the box goes to the top centre, shrunk to keep clear of both.
+        let f3 = self.lookat_f3_open();
         let corner = match s.position() {
             Position::Top => None,
             Position::TopLeft => Some(Corner::TopLeft),
             Position::TopRight => Some(Corner::TopRight),
         };
-        // A corner F3's debug screen takes gives way to the top centre.
-        let (left, top) = match corner.filter(|&c| self.native_corner_shown(c)) {
+        let corner = corner.filter(|&c| !f3 && self.native_corner_shown(c));
+        let scale = match (corner, f3) {
+            (None, true) => {
+                let ratio = self.lookat_f3_ratio(batch);
+                lk::beside_f3(s.size(), unscaled.0, batch.width, ratio)
+            }
+            _ => s.size(),
+        };
+        let outer = (unscaled.0 * scale, unscaled.1 * scale);
+        let (left, top) = match corner {
             Some(c) => {
                 let gap = lk::CORNER_GAP;
                 let (x, y) = corners.place(c, outer.0 + 2.0 * gap, outer.1 + 2.0 * gap);
                 ((x + gap).round(), y + gap)
             }
-            None => (lk::top_centre(batch.width, outer.0), lk::MARGIN - lk::FRAME),
+            None => {
+                let bosses = self.boss_overlay.bars(boss_overlay::now_millis()).len();
+                (
+                    lk::top_centre(batch.width, outer.0),
+                    lk::top_centre_top(bosses, batch.height),
+                )
+            }
         };
         let content = (left + lk::FRAME, top + lk::FRAME);
         let start = batch.vertices.len();
@@ -86,6 +104,29 @@ impl Game<'_> {
         if scale != 1.0 {
             batch.scale_since(start, left, top, scale, scale);
         }
+    }
+
+    /// Whether F3's debug screen is open: the top left is the corner every
+    /// Horizon reports taken then (`native_corner_shown`).
+    fn lookat_f3_open(&self) -> bool {
+        !self.native_corner_shown(Corner::TopLeft)
+    }
+
+    /// The debug screen's pixels per GUI pixel (`draw_debug_overlay`'s
+    /// scale: 1, or less under the default debug GUI scale).
+    fn lookat_f3_ratio(&self, batch: &HudBatch) -> f32 {
+        let framebuffer = self.renderer.as_ref().map_or_else(
+            || [batch.width * batch.scale, batch.height * batch.scale].map(|v| v as i32),
+            |r| [r.config.width, r.config.height].map(|v| v as i32),
+        );
+        let (ratio, _) = debug_overlay::scale(
+            framebuffer,
+            batch.scale as i32,
+            self.settings.file.int("debugGuiScale"),
+            self.settings.force_unicode,
+            [batch.width as i32, batch.height as i32],
+        );
+        ratio
     }
 
     /// The block or entity under the crosshair within the range, nearest

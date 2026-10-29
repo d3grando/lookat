@@ -13,6 +13,12 @@ same look and the same settings, and it now sees entities.
 > **Native mods are not sandboxed.** Unlike the WebAssembly LookAt, a native mod is Rust source compiled into your own
 > Horizon executable and runs with your user rights. Read the source before building (it is small: `mixins/lookat/`).
 
+## What's new in 0.2.1
+
+- **F3 is kept clear.** With the debug screen open, a top-left or top-right box moves to the top centre (F3 has a
+  column in each top corner), and a large box shrinks there so that it stays between the two columns.
+- **Boss bars.** At the top centre the box sits under the boss bars instead of over them.
+
 ## What's new in 0.2.0
 
 - **Entities.** Mobs and other players show their name (a custom name or a player's name when they have one) and
@@ -25,7 +31,7 @@ same look and the same settings, and it now sees entities.
 - **Size**: the whole box, text included, at 100%, 125%, 150% or 200%. The WebAssembly API couldn't scale text.
 - **Corners share.** In the top left or top right, the box stacks under what Horizon already shows there (the
   minimap, status effect icons, other mods' boxes) instead of over it. In an empty corner it sits exactly where 0.1.0
-  put it. With F3 open, a top-left box moves to the top centre.
+  put it. With F3 open, a corner box moves to the top centre.
 - **Real text widths and eyes.** Widths come from the game's font, and the distance is from your actual eyes
   (sneaking, swimming), not a standing player's.
 
@@ -81,7 +87,7 @@ release to release. LookAt hooks only hook points, all with HEAD hooks:
 
 and uses their helpers for everything they offer: `native_on` (the off switch), `native_setting` /
 `native_set_setting` (the settings files), `native_fill`, `native_text`, `native_text_width` (the box) and
-`native_corner_shown` (F3).
+`native_corner_shown` (whether F3 is open: it reports the top left taken then).
 
 The helpers don't see what the crosshair hits, so `native.rs` also reads the game's own state, and the bundle is
 **pinned** to one Horizon commit (`horizon_revision` in `horizon-mixin.toml`) rather than to a hook-points version. No
@@ -96,6 +102,8 @@ game function is hooked; these are the internals it reads, each because no hook 
 | `mobs`, `ray_box`, `riding`, `remote_player_names`, `mobs::finalize::max_health` | the mob or player under the crosshair within LookAt's range, its name and its health |
 | `remote_object_hit`, `entity_pick_result`, `item_frames`, `dragon_hit` | boats, minecarts, armor stands, paintings, end crystals, item frames and the dragon, within the game's own reach |
 | `draw_item_model`, `gui.atlas` (`HudBatch::sprite`, `scale_since`) | item icons and heart sprites as the HUD draws them, and the Size option |
+| `boss_overlay` (`bars`) | the boss bars' count, to sit under them at the top centre |
+| `debug_overlay::scale`, `renderer` (`config`), `settings.file` (`debugGuiScale`), `settings.force_unicode` | how large F3's columns are against the GUI, to keep a top-centre box between them (the hook point's `native_corner_shown` reports only F3's left column at this commit) |
 
 Pinned: Horizon `142388e1c136e622652ec7505af15d8ad195e041` and horizon-mixins
 `0d6b103c70633d8fd9443d8d0acd3aadaacedb06`, game 26.3, the same as TreeFall 0.3.0 and Mason 0.2.0, so the three build
@@ -104,6 +112,9 @@ points cover the crosshair's target, entities and item icons, the pin can go.
 
 ## Limits
 
+- Beside F3 the box keeps clear of columns as wide as vanilla's longest lines there (about a third of the debug
+  screen); a line longer than that (a very long CPU name, another mod's F3 lines) can still reach it. The box shrinks
+  to half size at most.
 - Mobs and players are seen within LookAt's range; boats, minecarts, armor stands, paintings, item frames, end
   crystals and the dragon only within the game's own reach (3 blocks, 5 in creative), as the game aims at them.
 - The ender dragon's health isn't shown.
