@@ -1,4 +1,4 @@
-// LookAt's adapter to the game (Horizon 142388e1c136e622652ec7505af15d8ad195e041,
+// LookAt's adapter to the game (Horizon fdc87aecdbd116bf1e08adcd062fcbaea8c2e2ca,
 // see horizon-mixin.toml). Injected as `crate::game::lookat_native`: it reads
 // what the crosshair hits from the window's game, hands it to the
 // game-independent `crate::game::lookat` (runtime.rs), and draws the box it

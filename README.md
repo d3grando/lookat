@@ -105,9 +105,9 @@ game function is hooked; these are the internals it reads, each because no hook 
 | `boss_overlay` (`bars`) | the boss bars' count, to sit under them at the top centre |
 | `debug_overlay::scale`, `renderer` (`config`), `settings.file` (`debugGuiScale`), `settings.force_unicode` | how large F3's columns are against the GUI, to keep a top-centre box between them (the hook point's `native_corner_shown` reports only F3's left column at this commit) |
 
-Pinned: Horizon `142388e1c136e622652ec7505af15d8ad195e041` and horizon-mixins
-`0d6b103c70633d8fd9443d8d0acd3aadaacedb06`, game 26.3, the same as TreeFall 0.3.0 and Mason 0.2.0, so the three build
-into one game (checked: `horizon-mixins plan` of all three, 20 injections and 14 modules, no conflict). When hook
+Pinned: Horizon `fdc87aecdbd116bf1e08adcd062fcbaea8c2e2ca` and horizon-mixins
+`5a64af938ec86b00d53d16a408aabc0038fb3e57`, game 26.3 (Nightly 2026-11-08). Checked on that commit with `horizon-mixins apply` and `cargo check`, alone and
+together with TreeFall, Mouse Tricks and Enchantment Hints, no conflict. When hook
 points cover the crosshair's target, entities and item icons, the pin can go.
 
 ## Limits

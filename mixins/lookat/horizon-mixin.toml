@@ -10,7 +10,7 @@ priority = 100
 # renderer. So the mod is made for this one commit (README.md, "Hook points
 # and pins").
 [compatibility]
-horizon_revision = "142388e1c136e622652ec7505af15d8ad195e041"
+horizon_revision = "fdc87aecdbd116bf1e08adcd062fcbaea8c2e2ca"
 
 [[module]]
 id = "runtime"
